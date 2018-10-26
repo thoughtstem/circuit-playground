@@ -1,0 +1,29 @@
+#lang circuit-playground
+
+(define team-color blue)
+(define ammo       3)
+
+(on-start
+ (play-riff jingle1))
+
+(define (flash-effect c1 c2)
+  (repeat 4
+          (set-lights c1)
+          (wait 0.20)
+          (set-lights c2)
+          (wait 0.20)))
+
+(on-ir n
+       (if (= n 5)
+           (set! team-color green)
+           #f)) 
+
+(on-down button_a
+         (set! ammo (- ammo 1))
+         (flash-effect red orange)
+         (send-ir 5))
+
+(forever
+  (if (= 0 ammo)
+      (flash-effect white black)
+      (set-lights team-color)))

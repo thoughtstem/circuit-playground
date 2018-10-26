@@ -1,0 +1,104 @@
+#lang racket
+
+(require "./circuit-python-base.rkt")
+(require "./circuit-python.rkt")
+
+(provide  on-down
+          on-up
+          BUTTON_A
+          BUTTON_B)
+
+(declare-imports 'board 'time 'digitalio 'touchio 'express)
+
+(define BUTTON_A 'express.cpx.button_a)
+(define BUTTON_B 'express.cpx.button_b)
+
+#;(define (init-button-a)
+  `(do
+     (setv BUTTON_A (digitalio.DigitalInOut board.BUTTON_A))
+     (setv BUTTON_A.direction digitalio.Direction.INPUT)
+     (setv BUTTON_A.pull digitalio.Pull.DOWN)
+     (setv BUTTON_A_prev BUTTON_A.value)))
+
+#;(define (init-button-b)
+  `(do
+     (setv BUTTON_B (digitalio.DigitalInOut board.BUTTON_B))
+     (setv BUTTON_B.direction digitalio.Direction.INPUT)
+     (setv BUTTON_B.pull digitalio.Pull.DOWN)
+     (setv BUTTON_B_prev BUTTON_B.value )))
+
+(define (init-pad p)
+  ;(define board.p     (string->symbol (format "board.~a" p)))
+  (define pin_p       (string->symbol (format "touch_~a" p)))
+  (define pin_p_prev  (string->symbol (format "touch_~a_prev" p)))
+  ;(define pin_p.value (string->symbol (format "PIN_~a.value" p)))
+  (define express.cpx.touch_p (string->symbol (format "express.cpx.touch_~a" p)))
+  `(do
+     (setv ,pin_p      ,express.cpx.touch_p)
+     (setv ,pin_p_prev ,pin_p)))
+
+
+(add-setup-code
+; (init-button-a)
+; (init-button-b)
+ (init-pad 'A1)
+ (init-pad 'A2)
+ (init-pad 'A3)
+ (init-pad 'A4)
+ (init-pad 'A5)
+ (init-pad 'A6)
+ (init-pad 'A7))
+
+
+
+
+
+(define-function (update-buttons)
+  '(setv BUTTON_A_prev express.cpx.button_a)
+  '(setv BUTTON_B_prev express.cpx.button_b)
+  '(setv touch_A1_prev express.cpx.touch_A1)
+  '(setv touch_A2_prev express.cpx.touch_A2)
+  '(setv touch_A3_prev express.cpx.touch_A3)
+  '(setv touch_A4_prev express.cpx.touch_A4)
+  '(setv touch_A5_prev express.cpx.touch_A5)
+  '(setv touch_A6_prev express.cpx.touch_A6)
+  '(setv touch_A7_prev express.cpx.touch_A7)
+  
+  (set state.hardware.BUTTON_A 'express.cpx.button_a)
+  (set state.hardware.BUTTON_B 'express.cpx.button_b)
+  (set state.hardware.A1       'express.cpx.touch_A1)
+  (set state.hardware.A2       'express.cpx.touch_A2)
+  (set state.hardware.A3       'express.cpx.touch_A3)
+  (set state.hardware.A4       'express.cpx.touch_A4)
+  (set state.hardware.A5       'express.cpx.touch_A5)
+  (set state.hardware.A6       'express.cpx.touch_A6)
+  (set state.hardware.A7       'express.cpx.touch_A7))
+
+(add-main-loop-code-end
+ (update-buttons))
+
+
+(define-syntax (on-down stx)
+  (syntax-case stx ()
+    [(_ b lines ...)
+     (with-syntax ([v (string->symbol (format "express.cpx.~a" (syntax->datum #'b)))]
+                   [p (string->symbol (format "~a_prev"  (syntax->datum #'b)))])
+       #`(add-main-loop-code-begin `(if (not (= v p))
+                                        (if v
+                                            (do
+                                                ,lines ...)))))]))
+
+(define-syntax (on-up stx)
+  (syntax-case stx ()
+    [(_ b lines ...)
+     (with-syntax ([v (string->symbol (format "express.cpx.~a" (syntax->datum #'b)))]
+                   [p (string->symbol (format "~a_prev" (syntax->datum #'b)))])
+       #`(add-main-loop-code-begin `(if (not (= v p))
+                                        (if (not v)
+                                            (do
+                                                ,lines ...)))))]))
+
+
+
+
+ 
